@@ -22,9 +22,8 @@ import {
   DollarSign
 } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
-import { Business, BlogPost, Program } from '../types';
+import { Business, BlogPost } from '../types';
 import ImageUpload from '../components/ImageUpload';
-import CloudinaryImageUpload from '../components/CloudinaryImageUpload';
 
 const Admin: React.FC = () => {
   const {
@@ -611,10 +610,13 @@ const Admin: React.FC = () => {
                   <label className="block text-sm font-inter font-medium text-gray-700 mb-2">
                     Featured Image
                   </label>
-                  <CloudinaryImageUpload
-                    currentImageUrl={newBlogPost.imageUrl}
-                    onImageUpload={(imageUrl) => setNewBlogPost(prev => ({ ...prev, imageUrl }))}
+                  <ImageUpload
+                    currentImage={newBlogPost.imageUrl}
+                    onImageChange={(imageUrl) => setNewBlogPost(prev => ({ ...prev, imageUrl }))}
                     onImageRemove={() => setNewBlogPost(prev => ({ ...prev, imageUrl: '' }))}
+                    maxWidth={800}
+                    maxHeight={600}
+                    placeholder="Upload featured image"
                     className="max-w-md"
                   />
                 </div>
@@ -690,10 +692,13 @@ const Admin: React.FC = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-royal-blue focus:border-transparent"
                           />
                         </div>
-                        <CloudinaryImageUpload
-                          currentImageUrl={editingBlogPost.imageUrl}
-                          onImageUpload={(imageUrl) => setEditingBlogPost(prev => prev ? { ...prev, imageUrl } : null)}
+                        <ImageUpload
+                          currentImage={editingBlogPost.imageUrl}
+                          onImageChange={(imageUrl) => setEditingBlogPost(prev => prev ? { ...prev, imageUrl } : null)}
                           onImageRemove={() => setEditingBlogPost(prev => prev ? { ...prev, imageUrl: '' } : null)}
+                          maxWidth={800}
+                          maxHeight={600}
+                          placeholder="Upload featured image"
                           className="max-w-md"
                         />
                         <textarea
