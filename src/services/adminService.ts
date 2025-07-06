@@ -323,6 +323,26 @@ export class AdminService {
     }
   }
 
+  static async resetProgramsToDefaults(): Promise<void> {
+    try {
+      console.log('Resetting programs to default colors...');
+      const programsRef = collection(db, 'programs');
+      const querySnapshot = await getDocs(programsRef);
+      
+      // Delete all existing programs
+      for (const doc of querySnapshot.docs) {
+        await deleteDoc(doc.ref);
+      }
+      
+      // Insert the default programs with correct colors
+      await this.insertDefaultPrograms();
+      console.log('Programs reset to defaults successfully');
+    } catch (error) {
+      console.error('Error in resetProgramsToDefaults:', error);
+      throw new Error(`Failed to reset programs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
   static async updateProgram(id: string, program: Partial<Program>): Promise<void> {
     try {
       console.log('Updating program:', id, program);

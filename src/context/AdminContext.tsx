@@ -36,6 +36,7 @@ interface AdminContextType {
   removeBlogPost: (id: string) => Promise<void>;
   updateBlogPost: (id: string, post: Partial<BlogPost>) => Promise<void>;
   updateProgram: (id: string, program: Partial<Program>) => Promise<void>;
+  resetProgramsToDefaults: () => Promise<void>;
   addRegistration: (registration: any) => Promise<void>;
   getRegistrations: () => any[];
   removeRegistration: (id: string) => Promise<void>;
@@ -284,6 +285,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const resetProgramsToDefaults = async () => {
+    try {
+      console.log('Resetting programs to defaults via context...');
+      await AdminService.resetProgramsToDefaults();
+      await refreshData();
+      console.log('Programs reset to defaults and data refreshed');
+    } catch (error) {
+      console.error('Error resetting programs:', error);
+      throw error;
+    }
+  };
+
   const addRegistration = async (registration: any) => {
     try {
       console.log('Adding registration via context...');
@@ -401,6 +414,7 @@ Sent from Kingdom Business Studio Contact Form
         removeBlogPost,
         updateBlogPost,
         updateProgram,
+        resetProgramsToDefaults,
         addRegistration,
         getRegistrations,
         removeRegistration,

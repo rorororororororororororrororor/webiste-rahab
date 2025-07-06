@@ -46,6 +46,7 @@ const Admin: React.FC = () => {
     removeBlogPost,
     updateBlogPost,
     updateProgram,
+    resetProgramsToDefaults,
     removeRegistration,
     updateRegistrationPrice,
     updateContactInfo,
@@ -207,6 +208,18 @@ const Admin: React.FC = () => {
     } catch (error) {
       console.error('Error updating program:', error);
       alert('Failed to update program. Please try again.');
+    }
+  };
+
+  const handleResetPrograms = async () => {
+    if (window.confirm('Are you sure you want to reset all programs to their default colors? This will delete all existing programs and recreate them with the correct colors.')) {
+      try {
+        await resetProgramsToDefaults();
+        alert('Programs reset to default colors successfully!');
+      } catch (error) {
+        console.error('Error resetting programs:', error);
+        alert('Failed to reset programs. Please try again.');
+      }
     }
   };
 
@@ -801,7 +814,15 @@ const Admin: React.FC = () => {
         {activeTab === 'programs' && (
           <div className="space-y-8">
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-xl font-playfair font-bold text-gray-900 mb-6">Programs</h2>
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-playfair font-bold text-gray-900">Programs</h2>
+                <button
+                  onClick={handleResetPrograms}
+                  className="bg-red-500 text-white px-4 py-2 rounded font-inter font-medium hover:bg-red-600 transition-colors"
+                >
+                  Reset to Default Colors
+                </button>
+              </div>
               <div className="space-y-6">
                 {programs.map((program) => (
                   <div key={program.id} className="border border-gray-200 rounded-lg p-6">
