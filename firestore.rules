@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Allow public read access to businesses, blog posts, programs, and site settings
+    match /businesses/{document} {
+      allow read: if true;
+      allow write: if true; // Admin operations will be handled by client-side authentication
+    }
+    
+    match /blog_posts/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /programs/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    match /site_settings/{document} {
+      allow read: if true;
+      allow write: if true;
+    }
+    
+    // Allow public write access to registrations (for user registrations)
+    match /registrations/{document} {
+      allow read, write: if true;
+    }
+  }
+} 

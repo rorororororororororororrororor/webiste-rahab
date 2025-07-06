@@ -1,58 +1,61 @@
-import { supabaseAdmin } from '../lib/supabase';
-
 export class ImageService {
-  // Upload image to Supabase Storage
-  static async uploadImage(file: File, bucket: string, folder: string): Promise<string> {
+  private static API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backend1-gnbtaodu2-rowans-projects-35c2db59.vercel.app';
+
+  // Upload image to Cloudinary via backend API
+  static async uploadImage(file: File, folder: string = 'blog_images'): Promise<string> {
     try {
-      // Generate unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      // Upload file
-      const { data, error } = await supabaseAdmin.storage
-        .from(bucket)
-        .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (error) {
-        console.error('Upload error:', error);
-        throw new Error(`Failed to upload image: ${error.message}`);
+      // Validate file
+      if (!file) {
+        throw new Error('No file provided');
       }
 
-      // Get public URL
-      const { data: urlData } = supabaseAdmin.storage
-        .from(bucket)
-        .getPublicUrl(fileName);
+      // Check file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error('Only image files are allowed');
+      }
 
-      return urlData.publicUrl;
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File size must be less than 10MB');
+      }
+
+      // Create form data
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Upload to backend
+      const response = await fetch(`${this.API_BASE_URL}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      return result.url;
     } catch (error) {
       console.error('Error in uploadImage:', error);
-      throw error;
+      throw new Error(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
-  // Delete image from Supabase Storage
-  static async deleteImage(url: string, bucket: string): Promise<void> {
+  // Delete image from Cloudinary (optional)
+  static async deleteImage(publicId: string): Promise<void> {
     try {
-      // Extract filename from URL
-      const urlParts = url.split('/');
-      const fileName = urlParts[urlParts.length - 1];
-      const folder = urlParts[urlParts.length - 2];
-      const fullPath = `${folder}/${fileName}`;
+      const response = await fetch(`${this.API_BASE_URL}/api/delete/${publicId}`, {
+        method: 'DELETE',
+      });
 
-      const { error } = await supabaseAdmin.storage
-        .from(bucket)
-        .remove([fullPath]);
-
-      if (error) {
-        console.error('Delete error:', error);
-        throw new Error(`Failed to delete image: ${error.message}`);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Delete failed: ${response.status}`);
       }
     } catch (error) {
       console.error('Error in deleteImage:', error);
-      throw error;
+      throw new Error(`Failed to delete image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -100,5 +103,33 @@ export class ImageService {
 
       img.src = URL.createObjectURL(file);
     });
+  }
+
+  // Get optimized Cloudinary URL with transformations
+  static getOptimizedUrl(url: string, width?: number, height?: number, quality: string = 'auto'): string {
+    if (!url || !url.includes('cloudinary.com')) {
+      return url;
+    }
+
+    // Add Cloudinary transformations
+    const transformations = [];
+    if (width) transformations.push(`w_${width}`);
+    if (height) transformations.push(`h_${height}`);
+    if (quality) transformations.push(`q_${quality}`);
+
+    if (transformations.length === 0) {
+      return url;
+    }
+
+    // Insert transformations into the URL
+    const urlParts = url.split('/');
+    const uploadIndex = urlParts.findIndex(part => part === 'upload');
+    
+    if (uploadIndex !== -1) {
+      urlParts.splice(uploadIndex + 1, 0, transformations.join(','));
+      return urlParts.join('/');
+    }
+
+    return url;
   }
 }

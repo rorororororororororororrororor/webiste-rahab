@@ -9,8 +9,3 @@
   from = "/*"
   to = "/index.html"
   status = 200
-
-[context.production.environment]
-  VITE_SUPABASE_URL = "https://nxpibfbykzeapwizlpvl.supabase.co"
-  VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54cGliZmJ5a3plYXB3aXpscHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4MDM5NDQsImV4cCI6MjA2NzM3OTk0NH0.TQHBJpnstqFNzNOtNVe8zVU-lHJkJtgjQBWYdGE_Xtw"
-  VITE_SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54cGliZmJ5a3plYXB3aXpscHZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTgwMzk0NCwiZXhwIjoyMDY3Mzc5OTQ0fQ.MM64-e7FGVuBFTsDuzMV9nCyMZakAkl_zjyEvnvSFfc"
