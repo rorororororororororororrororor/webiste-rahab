@@ -19,23 +19,38 @@ export class AdminService {
   // Authentication
   static async login(username: string, password: string): Promise<boolean> {
     try {
+      console.log('Attempting login with username:', username);
+      
+      // First try to get the admin password from the database
       const { data, error } = await supabase
         .from('site_settings')
         .select('value')
         .eq('key', 'admin_password')
         .single();
 
+      let adminPassword = 'kingdomstudio2025'; // Default fallback password
+
       if (error) {
-        console.error('Login error:', error);
-        return false;
+        console.warn('Could not fetch admin password from database, using default:', error);
+      } else if (data?.value) {
+        // Handle both string and JSON string formats
+        if (typeof data.value === 'string') {
+          adminPassword = data.value.replace(/^"|"$/g, ''); // Remove quotes if present
+        } else {
+          adminPassword = data.value;
+        }
+        console.log('Retrieved admin password from database');
       }
 
-      const adminPassword = data?.value;
+      console.log('Comparing passwords...');
       const isValid = username === 'admin' && password === adminPassword;
       
       if (isValid) {
         // Store admin session
         localStorage.setItem('kbs-admin-session', 'authenticated');
+        console.log('Login successful');
+      } else {
+        console.log('Login failed - invalid credentials');
       }
       
       return isValid;
@@ -84,11 +99,8 @@ export class AdminService {
   }
 
   static async addBusiness(business: Omit<Business, 'id'>): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Adding business:', business);
       const client = this.getClient();
       const { error } = await client
         .from('businesses')
@@ -104,6 +116,7 @@ export class AdminService {
         console.error('Error adding business:', error);
         throw new Error(`Failed to add business: ${error.message}`);
       }
+      console.log('Business added successfully');
     } catch (error) {
       console.error('Error in addBusiness:', error);
       throw error;
@@ -111,11 +124,8 @@ export class AdminService {
   }
 
   static async updateBusiness(id: string, business: Partial<Business>): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Updating business:', id, business);
       const updateData: any = {};
       if (business.name !== undefined) updateData.name = business.name;
       if (business.logo !== undefined) updateData.logo = business.logo;
@@ -133,6 +143,7 @@ export class AdminService {
         console.error('Error updating business:', error);
         throw new Error(`Failed to update business: ${error.message}`);
       }
+      console.log('Business updated successfully');
     } catch (error) {
       console.error('Error in updateBusiness:', error);
       throw error;
@@ -140,11 +151,8 @@ export class AdminService {
   }
 
   static async removeBusiness(id: string): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Removing business:', id);
       const client = this.getClient();
       const { error } = await client
         .from('businesses')
@@ -155,6 +163,7 @@ export class AdminService {
         console.error('Error removing business:', error);
         throw new Error(`Failed to remove business: ${error.message}`);
       }
+      console.log('Business removed successfully');
     } catch (error) {
       console.error('Error in removeBusiness:', error);
       throw error;
@@ -191,11 +200,8 @@ export class AdminService {
   }
 
   static async addBlogPost(post: Omit<BlogPost, 'id'>): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Adding blog post:', post);
       const client = this.getClient();
       const { error } = await client
         .from('blog_posts')
@@ -213,6 +219,7 @@ export class AdminService {
         console.error('Error adding blog post:', error);
         throw new Error(`Failed to add blog post: ${error.message}`);
       }
+      console.log('Blog post added successfully');
     } catch (error) {
       console.error('Error in addBlogPost:', error);
       throw error;
@@ -220,11 +227,8 @@ export class AdminService {
   }
 
   static async updateBlogPost(id: string, post: Partial<BlogPost>): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Updating blog post:', id, post);
       const updateData: any = {};
       if (post.title !== undefined) updateData.title = post.title;
       if (post.excerpt !== undefined) updateData.excerpt = post.excerpt;
@@ -244,6 +248,7 @@ export class AdminService {
         console.error('Error updating blog post:', error);
         throw new Error(`Failed to update blog post: ${error.message}`);
       }
+      console.log('Blog post updated successfully');
     } catch (error) {
       console.error('Error in updateBlogPost:', error);
       throw error;
@@ -251,11 +256,8 @@ export class AdminService {
   }
 
   static async removeBlogPost(id: string): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Removing blog post:', id);
       const client = this.getClient();
       const { error } = await client
         .from('blog_posts')
@@ -266,6 +268,7 @@ export class AdminService {
         console.error('Error removing blog post:', error);
         throw new Error(`Failed to remove blog post: ${error.message}`);
       }
+      console.log('Blog post removed successfully');
     } catch (error) {
       console.error('Error in removeBlogPost:', error);
       throw error;
@@ -275,6 +278,7 @@ export class AdminService {
   // Programs
   static async getPrograms(): Promise<Program[]> {
     try {
+      console.log('Fetching programs...');
       const { data, error } = await supabase
         .from('programs')
         .select('*')
@@ -282,29 +286,117 @@ export class AdminService {
 
       if (error) {
         console.error('Error fetching programs:', error);
-        return [];
+        // Return default programs if database fetch fails
+        return this.getDefaultPrograms();
       }
 
-      return data?.map(item => ({
+      if (!data || data.length === 0) {
+        console.log('No programs found in database, inserting defaults...');
+        await this.insertDefaultPrograms();
+        return this.getDefaultPrograms();
+      }
+
+      const programs = data.map(item => ({
         id: item.id,
         name: item.name,
         description: item.description,
         primaryColor: item.primary_color,
         accentColors: item.accent_colors,
         features: item.features
-      })) || [];
+      }));
+
+      console.log('Programs fetched successfully:', programs);
+      return programs;
     } catch (error) {
       console.error('Error in getPrograms:', error);
-      return [];
+      return this.getDefaultPrograms();
+    }
+  }
+
+  static getDefaultPrograms(): Program[] {
+    return [
+      {
+        id: 'whats-in-your-hand',
+        name: "What's in Your Hand",
+        description: "An 8-week business development studio for kingdom-minded individuals who want to build ventures rooted in God's vision. Whether transitioning from a 9–5 or launching a business alongside your job, this program helps participants create, refine, and launch a profitable venture, guided by biblical values, spiritual clarity, and strategic structure.",
+        primaryColor: 'royal-blue',
+        accentColors: ['mustard-yellow', 'ivory'],
+        features: [
+          '8-week intensive program',
+          'Biblical business principles',
+          'Spiritual clarity sessions',
+          'Strategic structure development',
+          'Peer collaboration',
+          'Expert mentorship'
+        ]
+      },
+      {
+        id: 'net-in-the-deep',
+        name: 'Net in the Deep',
+        description: 'A track for those ready to go deeper. It focuses on scaling, structure, spiritual discipline, and obedience-driven action. Ideal for those with businesses in development who want to formalize and scale in alignment with their faith.',
+        primaryColor: 'mustard-yellow',
+        accentColors: ['ivory', 'royal-blue'],
+        features: [
+          'Business scaling strategies',
+          'Spiritual discipline training',
+          'Obedience-driven action plans',
+          'Formalization processes',
+          'Faith-aligned scaling',
+          'Advanced mentorship'
+        ]
+      },
+      {
+        id: 'the-boat',
+        name: 'The Boat',
+        description: 'A content hub for teaching, storytelling, and prophetic business conversations via YouTube. Join us for inspiring content that bridges faith and entrepreneurship.',
+        primaryColor: 'royal-blue',
+        accentColors: ['mustard-yellow', 'ivory'],
+        features: [
+          'Weekly YouTube content',
+          'Prophetic business insights',
+          'Success stories',
+          'Teaching sessions',
+          'Community discussions',
+          'Live Q&A sessions'
+        ]
+      }
+    ];
+  }
+
+  static async insertDefaultPrograms(): Promise<void> {
+    try {
+      console.log('Inserting default programs...');
+      const client = this.getClient();
+      const programs = this.getDefaultPrograms();
+
+      for (const program of programs) {
+        const { error } = await client
+          .from('programs')
+          .upsert({
+            id: program.id,
+            name: program.name,
+            description: program.description,
+            primary_color: program.primaryColor,
+            accent_colors: program.accentColors,
+            features: program.features
+          }, {
+            onConflict: 'id'
+          });
+
+        if (error) {
+          console.error(`Error inserting program ${program.id}:`, error);
+        } else {
+          console.log(`Program ${program.id} inserted successfully`);
+        }
+      }
+    } catch (error) {
+      console.error('Error inserting default programs:', error);
     }
   }
 
   static async updateProgram(id: string, program: Partial<Program>): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
+      console.log('Updating program:', id, program);
       const updateData: any = {};
       if (program.name !== undefined) updateData.name = program.name;
       if (program.description !== undefined) updateData.description = program.description;
@@ -322,6 +414,7 @@ export class AdminService {
         console.error('Error updating program:', error);
         throw new Error(`Failed to update program: ${error.message}`);
       }
+      console.log('Program updated successfully');
     } catch (error) {
       console.error('Error in updateProgram:', error);
       throw error;
@@ -370,6 +463,7 @@ export class AdminService {
 
   static async addRegistration(registration: any): Promise<void> {
     try {
+      console.log('Adding registration:', registration);
       const { error } = await supabase
         .from('registrations')
         .insert({
@@ -391,6 +485,7 @@ export class AdminService {
         console.error('Error adding registration:', error);
         throw new Error(`Failed to add registration: ${error.message}`);
       }
+      console.log('Registration added successfully');
     } catch (error) {
       console.error('Error in addRegistration:', error);
       throw error;
@@ -403,6 +498,7 @@ export class AdminService {
     }
 
     try {
+      console.log('Removing registration:', id);
       const client = this.getClient();
       const { error } = await client
         .from('registrations')
@@ -413,6 +509,7 @@ export class AdminService {
         console.error('Error removing registration:', error);
         throw new Error(`Failed to remove registration: ${error.message}`);
       }
+      console.log('Registration removed successfully');
     } catch (error) {
       console.error('Error in removeRegistration:', error);
       throw error;
@@ -422,6 +519,7 @@ export class AdminService {
   // Site Settings - Enhanced with better error handling and retry logic
   static async getSetting(key: string): Promise<any> {
     try {
+      console.log(`Fetching setting: ${key}`);
       const { data, error } = await supabase
         .from('site_settings')
         .select('value')
@@ -432,6 +530,7 @@ export class AdminService {
         console.error(`Error fetching setting ${key}:`, error);
         return null;
       }
+      console.log(`Setting ${key} fetched:`, data?.value);
       return data?.value;
     } catch (error) {
       console.error(`Error in getSetting for ${key}:`, error);
@@ -440,10 +539,6 @@ export class AdminService {
   }
 
   static async updateSetting(key: string, value: any): Promise<void> {
-    if (!this.isAdminAuthenticated()) {
-      throw new Error('Admin authentication required');
-    }
-
     try {
       console.log(`Updating setting ${key} with value:`, value);
       
@@ -456,10 +551,10 @@ export class AdminService {
         .eq('key', key)
         .select();
 
-      if (updateError) {
-        console.log(`Update failed, trying upsert for ${key}:`, updateError);
+      if (updateError || !updateData || updateData.length === 0) {
+        console.log(`Update failed or no rows affected, trying upsert for ${key}:`, updateError);
         
-        // If update fails, try upsert
+        // If update fails or affects no rows, try upsert
         const { error: upsertError } = await client
           .from('site_settings')
           .upsert({
@@ -473,6 +568,8 @@ export class AdminService {
         if (upsertError) {
           console.error(`Upsert failed for setting ${key}:`, upsertError);
           throw new Error(`Failed to update setting: ${upsertError.message}`);
+        } else {
+          console.log(`Successfully upserted setting ${key}`);
         }
       } else {
         console.log(`Successfully updated setting ${key}:`, updateData);

@@ -6,6 +6,13 @@ import { useAdmin } from '../context/AdminContext';
 const Home: React.FC = () => {
   const { businesses, blogPosts, programs } = useAdmin();
 
+  // Ensure programs are in the correct order: What's in Your Hand, Net in the Deep, The Boat
+  const orderedPrograms = [
+    programs.find(p => p.id === 'whats-in-your-hand'),
+    programs.find(p => p.id === 'net-in-the-deep'),
+    programs.find(p => p.id === 'the-boat')
+  ].filter(Boolean);
+
   return (
     <div className="animate-fade-in">
       {/* Hero Section */}
@@ -105,7 +112,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {programs.map((program, index) => {
+            {orderedPrograms.map((program, index) => {
               const icons = [Hand, Waves, Video];
               const Icon = icons[index] || Hand;
               const bgColor = program.primaryColor === 'royal-blue' ? 'bg-royal-blue' : 'bg-mustard-yellow';
