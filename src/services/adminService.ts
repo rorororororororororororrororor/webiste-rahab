@@ -5,6 +5,7 @@ import {
   getDoc, 
   addDoc, 
   updateDoc, 
+  setDoc,
   deleteDoc, 
   query, 
   orderBy, 
@@ -440,10 +441,10 @@ export class AdminService {
     try {
       console.log('Updating setting:', key, value);
       const settingRef = doc(db, 'site_settings', key);
-      await updateDoc(settingRef, {
+      await setDoc(settingRef, {
         value: value,
         updatedAt: serverTimestamp()
-      });
+      }, { merge: true });
       console.log('Setting updated successfully');
     } catch (error) {
       console.error('Error in updateSetting:', error);

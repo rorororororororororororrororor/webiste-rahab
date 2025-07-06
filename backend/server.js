@@ -8,7 +8,7 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://your-domain.com'] // Replace with your actual domain
+    ? ['https://*.netlify.app', 'https://*.vercel.app'] // Allow any Netlify/Vercel domain
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true
 }));
