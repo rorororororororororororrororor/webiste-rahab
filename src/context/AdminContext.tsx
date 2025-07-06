@@ -20,7 +20,6 @@ interface AdminContextType {
   isAuthenticated: boolean;
   businesses: Business[];
   blogPosts: BlogPost[];
-  programs: Program[];
   registrations: any[];
   registrationPrice: number;
   contactInfo: ContactInfo;
@@ -35,8 +34,6 @@ interface AdminContextType {
   addBlogPost: (post: Omit<BlogPost, 'id'>) => Promise<void>;
   removeBlogPost: (id: string) => Promise<void>;
   updateBlogPost: (id: string, post: Partial<BlogPost>) => Promise<void>;
-  updateProgram: (id: string, program: Partial<Program>) => Promise<void>;
-  resetProgramsToDefaults: () => Promise<void>;
   addRegistration: (registration: any) => Promise<void>;
   getRegistrations: () => any[];
   removeRegistration: (id: string) => Promise<void>;
@@ -62,7 +59,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
-  const [programs, setPrograms] = useState<Program[]>([]);
   const [registrations, setRegistrations] = useState<any[]>([]);
   const [registrationPrice, setRegistrationPrice] = useState(3000);
   const [contactInfo, setContactInfo] = useState<ContactInfo>({
@@ -89,14 +85,12 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const [
         businessesData,
         blogPostsData,
-        programsData,
         priceData,
         contactData,
         socialData
       ] = await Promise.allSettled([
         AdminService.getBusinesses(),
         AdminService.getBlogPosts(),
-        AdminService.getPrograms(),
         AdminService.getRegistrationPrice(),
         AdminService.getContactInfo(),
         AdminService.getSocialMediaLinks()
@@ -105,7 +99,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Handle results with fallbacks
       const newBusinesses = businessesData.status === 'fulfilled' ? businessesData.value : [];
       const newBlogPosts = blogPostsData.status === 'fulfilled' ? blogPostsData.value : [];
-      const newPrograms = programsData.status === 'fulfilled' ? programsData.value : [];
       const newPrice = priceData.status === 'fulfilled' ? priceData.value : 3000;
       const newContactInfo = contactData.status === 'fulfilled' ? contactData.value : {
         phone: '+254 700 123 456',
@@ -123,7 +116,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       console.log('Data loaded:', {
         businesses: newBusinesses.length,
         blogPosts: newBlogPosts.length,
-        programs: newPrograms.length,
         price: newPrice,
         contactInfo: newContactInfo,
         socialLinks: newSocialLinks
@@ -131,7 +123,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
       setBusinesses(newBusinesses);
       setBlogPosts(newBlogPosts);
-      setPrograms(newPrograms);
       setRegistrationPrice(newPrice);
       setContactInfo(newContactInfo);
       setSocialMediaLinks(newSocialLinks);
@@ -152,7 +143,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Set default values on error
       setBusinesses([]);
       setBlogPosts([]);
-      setPrograms([]);
       setRegistrationPrice(3000);
     } finally {
       setLoading(false);
@@ -273,29 +263,7 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
-  const updateProgram = async (id: string, program: Partial<Program>) => {
-    try {
-      console.log('Updating program via context...');
-      await AdminService.updateProgram(id, program);
-      await refreshData();
-      console.log('Program updated and data refreshed');
-    } catch (error) {
-      console.error('Error updating program:', error);
-      throw error;
-    }
-  };
 
-  const resetProgramsToDefaults = async () => {
-    try {
-      console.log('Resetting programs to defaults via context...');
-      await AdminService.resetProgramsToDefaults();
-      await refreshData();
-      console.log('Programs reset to defaults and data refreshed');
-    } catch (error) {
-      console.error('Error resetting programs:', error);
-      throw error;
-    }
-  };
 
   const addRegistration = async (registration: any) => {
     try {
@@ -398,7 +366,6 @@ Sent from Kingdom Business Studio Contact Form
         isAuthenticated,
         businesses,
         blogPosts,
-        programs,
         registrations,
         registrationPrice,
         contactInfo,
@@ -413,8 +380,6 @@ Sent from Kingdom Business Studio Contact Form
         addBlogPost,
         removeBlogPost,
         updateBlogPost,
-        updateProgram,
-        resetProgramsToDefaults,
         addRegistration,
         getRegistrations,
         removeRegistration,

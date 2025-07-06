@@ -2,16 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Hand, Waves, Video, Star, ArrowRight, Crown, Users, Target, Heart } from 'lucide-react';
 import { useAdmin } from '../context/AdminContext';
+import { staticPrograms } from '../data/staticPrograms';
 
 const Home: React.FC = () => {
-  const { businesses, blogPosts, programs } = useAdmin();
+  const { businesses, blogPosts } = useAdmin();
 
-  // Ensure programs are in the correct order: What's in Your Hand, Net in the Deep, The Boat
+  // Use static programs in the correct order: What's in Your Hand, Net in the Deep, The Boat
   const orderedPrograms = [
-    programs.find(p => p.id === 'whats-in-your-hand'),
-    programs.find(p => p.id === 'net-in-the-deep'),
-    programs.find(p => p.id === 'the-boat')
-  ].filter(Boolean);
+    staticPrograms.find(p => p.id === 'whats-in-your-hand'),
+    staticPrograms.find(p => p.id === 'net-in-the-deep'),
+    staticPrograms.find(p => p.id === 'the-boat')
+  ].filter(Boolean) as typeof staticPrograms;
 
   return (
     <div className="animate-fade-in">

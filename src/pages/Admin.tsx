@@ -31,7 +31,6 @@ const Admin: React.FC = () => {
     isAuthenticated,
     businesses,
     blogPosts,
-    programs,
     registrations,
     registrationPrice,
     contactInfo,
@@ -45,8 +44,6 @@ const Admin: React.FC = () => {
     addBlogPost,
     removeBlogPost,
     updateBlogPost,
-    updateProgram,
-    resetProgramsToDefaults,
     removeRegistration,
     updateRegistrationPrice,
     updateContactInfo,
@@ -77,7 +74,6 @@ const Admin: React.FC = () => {
   });
   const [editingBusiness, setEditingBusiness] = useState<Business | null>(null);
   const [editingBlogPost, setEditingBlogPost] = useState<BlogPost | null>(null);
-  const [editingProgram, setEditingProgram] = useState<Program | null>(null);
   const [settingsForm, setSettingsForm] = useState({
     registrationPrice: registrationPrice,
     contactInfo: contactInfo,
@@ -198,30 +194,7 @@ const Admin: React.FC = () => {
     }
   };
 
-  const handleUpdateProgram = async () => {
-    if (!editingProgram) return;
-    try {
-      await updateProgram(editingProgram.id, editingProgram);
-      setEditingProgram(null);
-      setEditingItem(null);
-      alert('Program updated successfully!');
-    } catch (error) {
-      console.error('Error updating program:', error);
-      alert('Failed to update program. Please try again.');
-    }
-  };
 
-  const handleResetPrograms = async () => {
-    if (window.confirm('Are you sure you want to reset all programs to their default colors? This will delete all existing programs and recreate them with the correct colors.')) {
-      try {
-        await resetProgramsToDefaults();
-        alert('Programs reset to default colors successfully!');
-      } catch (error) {
-        console.error('Error resetting programs:', error);
-        alert('Failed to reset programs. Please try again.');
-      }
-    }
-  };
 
   const handleDeleteRegistration = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this registration?')) {
@@ -372,7 +345,6 @@ const Admin: React.FC = () => {
             {[
               { id: 'businesses', label: 'Businesses', icon: Briefcase },
               { id: 'blog', label: 'Blog Posts', icon: FileText },
-              { id: 'programs', label: 'Programs', icon: Crown },
               { id: 'registrations', label: 'Registrations', icon: Users },
               { id: 'settings', label: 'Settings', icon: Settings },
             ].map(({ id, label, icon: Icon }) => (
@@ -810,109 +782,7 @@ const Admin: React.FC = () => {
           </div>
         )}
 
-        {/* Programs Tab */}
-        {activeTab === 'programs' && (
-          <div className="space-y-8">
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-playfair font-bold text-gray-900">Programs</h2>
-                <button
-                  onClick={handleResetPrograms}
-                  className="bg-red-500 text-white px-4 py-2 rounded font-inter font-medium hover:bg-red-600 transition-colors"
-                >
-                  Reset to Default Colors
-                </button>
-              </div>
-              <div className="space-y-6">
-                {programs.map((program) => (
-                  <div key={program.id} className="border border-gray-200 rounded-lg p-6">
-                    {editingItem === program.id && editingProgram ? (
-                      <div className="space-y-4">
-                        <input
-                          type="text"
-                          value={editingProgram.name}
-                          onChange={(e) => setEditingProgram(prev => prev ? { ...prev, name: e.target.value } : null)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-royal-blue focus:border-transparent"
-                          placeholder="Program Name"
-                        />
-                        <textarea
-                          value={editingProgram.description}
-                          onChange={(e) => setEditingProgram(prev => prev ? { ...prev, description: e.target.value } : null)}
-                          rows={4}
-                          className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-royal-blue focus:border-transparent"
-                          placeholder="Program Description"
-                        />
-                        <div>
-                          <label className="block text-sm font-inter font-medium text-gray-700 mb-2">
-                            Features (one per line)
-                          </label>
-                          <textarea
-                            value={editingProgram.features.join('\n')}
-                            onChange={(e) => setEditingProgram(prev => prev ? { 
-                              ...prev, 
-                              features: e.target.value.split('\n').filter(f => f.trim()) 
-                            } : null)}
-                            rows={6}
-                            className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-royal-blue focus:border-transparent"
-                            placeholder="Enter features, one per line"
-                          />
-                        </div>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={handleUpdateProgram}
-                            className="bg-green-500 text-white px-4 py-2 rounded font-inter font-medium hover:bg-green-600 transition-colors"
-                          >
-                            Save Changes
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingItem(null);
-                              setEditingProgram(null);
-                            }}
-                            className="bg-gray-500 text-white px-4 py-2 rounded font-inter font-medium hover:bg-gray-600 transition-colors"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-lg font-playfair font-semibold text-gray-900 mb-2">{program.name}</h3>
-                            <p className="text-gray-600 font-inter mb-4">{program.description}</p>
-                            <div className="space-y-1">
-                              {program.features.map((feature, index) => (
-                                <div key={index} className="flex items-center text-gray-600 font-inter text-sm">
-                                  <div className="w-2 h-2 bg-royal-blue rounded-full mr-3"></div>
-                                  {feature}
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                            program.primaryColor === 'royal-blue' ? 'bg-royal-blue text-white' : 'bg-mustard-yellow text-white'
-                          }`}>
-                            {program.primaryColor}
-                          </span>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setEditingItem(program.id);
-                            setEditingProgram(program);
-                          }}
-                          className="bg-blue-500 text-white px-4 py-2 rounded font-inter font-medium hover:bg-blue-600 transition-colors"
-                        >
-                          Edit Program
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+
 
         {/* Registrations Tab */}
         {activeTab === 'registrations' && (
